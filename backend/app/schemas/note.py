@@ -1,13 +1,14 @@
+from typing import List, Optional
 from pydantic import BaseModel
-from typing import Optional, List
 from datetime import datetime
+from app.database.models import VisibilityStatus
 from .user import User
 from .tag import Tag
 
 class NoteBase(BaseModel):
     title: str
     content: str
-    visibility: str  
+    visibility: VisibilityStatus
 
 class NoteCreate(NoteBase):
     pass
@@ -15,9 +16,9 @@ class NoteCreate(NoteBase):
 class NoteUpdate(BaseModel):
     title: Optional[str] = None
     content: Optional[str] = None
-    visibility: Optional[str] = None
+    visibility: Optional[VisibilityStatus] = None
 
-class NoteInDBBase(NoteBase):
+class Note(NoteBase):
     id: int
     owner_id: int
     created_at: datetime
@@ -26,10 +27,7 @@ class NoteInDBBase(NoteBase):
     class Config:
         from_attributes = True
 
-class Note(NoteInDBBase):
+class NoteInDB(Note):
     owner: User
     tags: List[Tag] = []
-    shared_with: List[User] = []
-
-class NoteInDB(NoteInDBBase):
-    pass 
+    shared_with: List[User] = [] 
