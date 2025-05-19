@@ -22,7 +22,6 @@ def register(
     db: Session = Depends(get_db),
     user_in: UserCreate,
 ) -> Any:
-  
     user = db.query(User).filter(User.email == user_in.email).first()
     if user:
         raise HTTPException(
@@ -44,18 +43,34 @@ def login(
     db: Session = Depends(get_db),
     form_data: OAuth2PasswordRequestForm = Depends()
 ) -> Any:
-  
     user = db.query(User).filter(User.email == form_data.username).first()
-    if not user or not verify_password(form_data.password, user.hashed_password):
+    
+    print(f"Login attempt for user: {form_data.username}")
+    print(f"User found: {user is not None}")
+    
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    
+    # Verify password
+    if not verify_password(form_data.password, user.hashed_password):
+        print("Password verification failed")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Create access token
     access_token_expires = timedelta(minutes=JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": str(user.id)}, expires_delta=access_token_expires
+    )
+    
     return {
-        "access_token": create_access_token(
-            data={"sub": str(user.id)}, expires_delta=access_token_expires
-        ),
+        "access_token": access_token,
         "token_type": "bearer",
     } 
