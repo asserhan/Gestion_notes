@@ -51,7 +51,7 @@ def login(
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
+            detail="User not found",
             headers={"WWW-Authenticate": "Bearer"},
         )
     
@@ -59,7 +59,7 @@ def login(
         print("Password verification failed")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
+            detail="Incorrect password",
             headers={"WWW-Authenticate": "Bearer"},
         )
     

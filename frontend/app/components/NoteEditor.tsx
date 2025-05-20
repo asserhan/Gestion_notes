@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../api/auth/context';
-import toast from 'react-hot-toast';
 import ReactMarkdown from 'react-markdown';
+import toast from 'react-hot-toast';
 
 interface Note {
   id?: number;
@@ -13,18 +12,17 @@ interface Note {
 }
 
 interface NoteEditorProps {
-  note?: Note;
+  note?: Note | null;
   onClose: () => void;
   onSave: () => void;
 }
 
 export default function NoteEditor({ note, onClose, onSave }: NoteEditorProps) {
-  const [title, setTitle] = useState(note?.title || '');
-  const [content, setContent] = useState(note?.content || '');
-  const [visibility, setVisibility] = useState(note?.visibility || 'private');
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [visibility, setVisibility] = useState('private');
   const [isPreview, setIsPreview] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const { user } = useAuth();
 
   useEffect(() => {
     if (note) {
@@ -34,22 +32,25 @@ export default function NoteEditor({ note, onClose, onSave }: NoteEditorProps) {
     }
   }, [note]);
 
-  const handleSave = async () => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSaving(true);
+
     try {
-      setIsSaving(true);
       const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
+      if (!token) throw new Error('No authentication token found');
 
       const noteData = {
         title,
         content,
         visibility,
-        ...(note?.id && { noteId: note.id }),
       };
 
-      const response = await fetch('/api/notes', {
+      const url = note?.id
+        ? `http://127.0.0.1:8000/api/notes/${note.id}`
+        : 'http://127.0.0.1:8000/api/notes';
+
+      const response = await fetch(url, {
         method: note?.id ? 'PUT' : 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -128,7 +129,7 @@ export default function NoteEditor({ note, onClose, onSave }: NoteEditorProps) {
               Cancel
             </button>
             <button
-              onClick={handleSave}
+              onClick={handleSubmit}
               disabled={isSaving}
               className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
             >

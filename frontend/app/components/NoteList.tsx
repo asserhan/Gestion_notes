@@ -1,7 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../api/auth/context';
+import React, { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import ReactMarkdown from 'react-markdown';
 
@@ -23,18 +22,11 @@ interface NoteListProps {
 export default function NoteList({ status, searchQuery, onNoteSelect }: NoteListProps) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
 
-  useEffect(() => {
-    fetchNotes();
-  }, [status, searchQuery]);
-
-  const fetchNotes = async () => {
+  const fetchNotes = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
+      if (!token) return;
 
       const params = new URLSearchParams();
       if (status && ['private', 'shared', 'public'].includes(status.toLowerCase())) {
@@ -49,19 +41,21 @@ export default function NoteList({ status, searchQuery, onNoteSelect }: NoteList
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || 'Failed to fetch notes');
+        throw new Error('Failed to fetch notes');
       }
 
       const data = await response.json();
       setNotes(data);
     } catch (error) {
       console.error('Error fetching notes:', error);
-      toast.error(error instanceof Error ? error.message : 'Failed to fetch notes');
     } finally {
       setLoading(false);
     }
-  };
+  }, [status, searchQuery]);
+
+  useEffect(() => {
+    fetchNotes();
+  }, [fetchNotes]);
 
   const handleDelete = async (noteId: number) => {
     try {

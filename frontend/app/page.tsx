@@ -15,7 +15,7 @@ interface Note {
 }
 
 export default function Home() {
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [status, setStatus] = useState('all');
   const [selectedNote, setSelectedNote] = useState<Note | undefined>(undefined);

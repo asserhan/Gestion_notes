@@ -44,6 +44,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await response.json();
 
       if (!response.ok) {
+        if (data.detail === "User not found") {
+          toast.error("No account found with this email. Please register first.");
+        } else if (data.detail === "Incorrect password") {
+          toast.error("Wrong password. Please try again.");
+        } else {
+          toast.error(data.detail || 'Login failed');
+        }
         throw new Error(data.detail || 'Login failed');
       }
 
@@ -55,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (!userResponse.ok) {
-        throw new Error('Failed to get user data');
+        throw new Error(data.detail || 'Failed to get user data');
       }
 
       const userData = await userResponse.json();
@@ -71,11 +78,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: userData.email,
       });
 
-      toast.success('Logged in successfully');
+      toast.success(`Welcome back ${userData.email}!`);
       router.push('/');
     } catch (error) {
       console.error('Login error:', error);
-      toast.error(error instanceof Error ? error.message : 'Login failed');
+      // Error message is already shown by toast above
       throw error;
     }
   };
@@ -104,7 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       if (!userResponse.ok) {
-        throw new Error('Failed to get user data');
+        throw new Error(data.detail || 'Failed to get user data');
       }
 
       const userData = await userResponse.json();
@@ -120,7 +127,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email: userData.email,
       });
 
-      toast.success('Registered successfully');
+      toast.success(`Welcome ${userData.email}! Your account has been created successfully.`);
       router.push('/');
     } catch (error) {
       console.error('Registration error:', error);
