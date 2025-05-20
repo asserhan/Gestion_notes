@@ -21,9 +21,10 @@ def create_note(
     note_in: NoteCreate,
     current_user: User = Depends(get_current_active_user)
 ) -> Any:
-   
     try:
         logger.info(f"Creating note with data: {note_in.dict()}")
+        logger.info(f"Current user ID: {current_user.id}")
+        
         visibility = VisibilityStatus(note_in.visibility)
         
         note = Note(
@@ -39,7 +40,9 @@ def create_note(
         db.commit()
         db.refresh(note)
         
-        # Convert visibility back from enum to string for response to fix the issue "inrernal server error"
+        logger.info(f"Note created with ID: {note.id}, Owner ID: {note.owner_id}")
+        
+        # Convert visibility back from enum to string for response
         note_dict = {
             **note.__dict__,
             'visibility': note.visibility.value
@@ -69,13 +72,22 @@ def read_notes(
     skip: int = 0,
     limit: int = 100
 ) -> Any:
-  
     try:
-        notes = db.query(Note).filter(
-            (Note.owner_id == current_user.id) | 
-            (Note.shared_with.contains(current_user))
-        ).offset(skip).limit(limit).all()
-        return notes
+        logger.info(f"Reading notes for user ID: {current_user.id}")
+        all_notes = db.query(Note).all()
+        logger.info(f"Total notes in database: {len(all_notes)}")
+        notes = db.query(Note).filter(Note.owner_id == current_user.id).all()
+        logger.info(f"Notes found for user: {len(notes)}")
+        for note in notes:
+            logger.info(f"Note ID: {note.id}, Title: {note.title}, Owner ID: {note.owner_id}")
+        notes_list = []
+        for note in notes:
+            note_dict = {
+                **note.__dict__,
+                'visibility': note.visibility.value
+            }
+            notes_list.append(note_dict) 
+        return notes_list
     except Exception as e:
         logger.error(f"Error retrieving notes: {str(e)}")
         raise HTTPException(
