@@ -10,7 +10,7 @@ from app.core.security import (
     get_password_hash,
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES
 )
-from app.core.deps import get_db
+from app.core.deps import get_db, get_current_active_user
 from app.database.models import User
 from app.schemas.user import UserCreate, User as UserSchema, Token
 
@@ -71,4 +71,10 @@ def login(
     return {
         "access_token": access_token,
         "token_type": "bearer",
-    } 
+    }
+
+@router.get("/me", response_model=UserSchema)
+def read_users_me(
+    current_user: User = Depends(get_current_active_user),
+) -> Any:
+    return current_user 

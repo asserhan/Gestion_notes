@@ -53,14 +53,14 @@ def create_note(
     except ValueError as e:
         logger.error(f"Invalid visibility value: {note_in.visibility}")
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=400,
             detail=f"Invalid visibility value. Must be one of: {[v.value for v in VisibilityStatus]}"
         )
     except Exception as e:
         logger.error(f"Error creating note: {str(e)}")
         db.rollback()
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=500,
             detail=f"Error creating note: {str(e)}"
         )
 
@@ -87,7 +87,7 @@ def read_notes(
                 logger.info(f"Filtering notes by status: {status}")
             except ValueError:
                 raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
+                    status_code=400,
                     detail=f"Invalid status value. Must be one of: {[v.value for v in VisibilityStatus]}"
                 )
         notes = query.offset(skip).limit(limit).all()
@@ -109,7 +109,7 @@ def read_notes(
     except Exception as e:
         logger.error(f"Error retrieving notes: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=500,
             detail=f"Error retrieving notes: {str(e)}"
         )
 
@@ -132,7 +132,7 @@ def read_note(
     except Exception as e:
         logger.error(f"Error retrieving note: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=500,
             detail=f"Error retrieving note: {str(e)}"
         )
 
@@ -164,7 +164,7 @@ def update_note(
         return note
     except ValueError as e:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=400,
             detail=f"Invalid visibility value. Must be one of: {[v.value for v in VisibilityStatus]}"
         )
     except HTTPException:
@@ -173,7 +173,7 @@ def update_note(
         logger.error(f"Error updating note: {str(e)}")
         db.rollback()
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=500,
             detail=f"Error updating note: {str(e)}"
         )
 
@@ -200,7 +200,7 @@ def delete_note(
         logger.error(f"Error deleting note: {str(e)}")
         db.rollback()
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=500,
             detail=f"Error deleting note: {str(e)}"
         )
 
@@ -244,7 +244,7 @@ def share_note(
         logger.error(f"Error sharing note: {str(e)}")
         db.rollback()
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=500,
             detail=f"Error sharing note: {str(e)}"
         )
 
@@ -267,7 +267,7 @@ def generate_public_link(
         note.visibility = VisibilityStatus.PUBLIC
         db.commit()
         
-        public_url = f"http://localhost:8000/api/notes/public/{public_token}"
+        public_url = f"http://127.0.0.1:8000/api/notes/public/{public_token}"
         
         logger.info(f"Generated public link for note {note_id}")
         
@@ -282,7 +282,7 @@ def generate_public_link(
         logger.error(f"Error generating public link: {str(e)}")
         db.rollback()
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=500,
             detail=f"Error generating public link: {str(e)}"
         )
 
@@ -310,6 +310,6 @@ def read_public_note(
     except Exception as e:
         logger.error(f"Error retrieving public note: {str(e)}")
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            status_code=500,
             detail=f"Error retrieving public note: {str(e)}"
         ) 

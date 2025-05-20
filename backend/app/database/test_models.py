@@ -33,7 +33,6 @@ def test_create_user():
 
 def test_create_note(user):
     try:
-        # Create a test note
         test_note = Note(
             title="Test Note",
             content="# This is a test note",
