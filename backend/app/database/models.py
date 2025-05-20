@@ -16,7 +16,7 @@ note_sharing = Table(
     Base.metadata,
     Column('note_id', Integer, ForeignKey('notes.id'), primary_key=True),
     Column('user_id', Integer, ForeignKey('users.id'), primary_key=True)
-)
+) 
 
 class User(Base):
     __tablename__ = "users"
@@ -26,7 +26,7 @@ class User(Base):
     hashed_password = Column(String)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-
+ 
     notes = relationship("Note", back_populates="owner")
     shared_notes = relationship(
         "Note",

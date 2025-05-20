@@ -83,22 +83,6 @@ npm install
 npm run dev
 ```
 
-## Tests
-
-### Backend
-
-```bash
-cd backend
-pytest
-```
-
-### Frontend
-
-```bash
-cd frontend
-npm test
-```
-
 ## Structure du Projet
 
 ```
@@ -119,25 +103,3 @@ Gestion_notes/
 │   └── package.json
 └── docker-compose.yml
 ```
-
-## Bonnes Pratiques Implémentées
-
-- Validation des données avec Pydantic
-- Gestion des erreurs centralisée
-- Tests unitaires et d'intégration
-- Documentation API avec Swagger
-- Sécurité avec JWT
-- Architecture modulaire
-- Code propre et maintenable
-
-## Contribution
-
-1. Fork le projet
-2. Créez une branche (`git checkout -b feature/AmazingFeature`)
-3. Committez vos changements (`git commit -m 'Add some AmazingFeature'`)
-4. Push vers la branche (`git push origin feature/AmazingFeature`)
-5. Ouvrez une Pull Request
-
-## Licence
-
-Ce projet est sous licence MIT. Voir le fichier `LICENSE` pour plus de détails.
