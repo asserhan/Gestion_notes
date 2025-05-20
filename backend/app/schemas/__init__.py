@@ -1,9 +1,7 @@
-from .user import User, UserCreate, UserInDB, Token, TokenPayload
+from .user import User, UserCreate, UserInDB, Token
 from .note import Note, NoteCreate, NoteUpdate, NoteInDB
-from .tag import Tag, TagCreate, TagInDB
 
 __all__ = [
-    "User", "UserCreate", "UserInDB", "Token", "TokenPayload",
-    "Note", "NoteCreate", "NoteUpdate", "NoteInDB",
-    "Tag", "TagCreate", "TagInDB"
+    "User", "UserCreate", "UserInDB", "Token",
+    "Note", "NoteCreate", "NoteUpdate", "NoteInDB"
 ] 

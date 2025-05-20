@@ -3,12 +3,11 @@ from pydantic import BaseModel
 from datetime import datetime
 from app.database.models import VisibilityStatus
 from .user import User
-from .tag import Tag
 
 class NoteBase(BaseModel):
     title: str
     content: str
-    visibility: str  
+    visibility: str  # Will be validated against VisibilityStatus enum
 
 class NoteCreate(NoteBase):
     pass
@@ -33,5 +32,4 @@ class Note(NoteBase):
 
 class NoteInDB(Note):
     owner: User
-    tags: List[Tag] = []
     shared_with: List[User] = [] 

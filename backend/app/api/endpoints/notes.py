@@ -5,7 +5,7 @@ import logging
 from datetime import datetime, UTC
 
 from app.core.deps import get_db, get_current_active_user
-from app.database.models import User, Note, Tag, VisibilityStatus
+from app.database.models import User, Note, VisibilityStatus
 from app.schemas.note import NoteCreate, NoteUpdate, Note as NoteSchema
 
 
