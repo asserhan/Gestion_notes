@@ -70,13 +70,29 @@ def read_notes(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
     skip: int = 0,
-    limit: int = 100
+    limit: int = 100,
+    search: str = None,
+    status: str = None
 ) -> Any:
     try:
         logger.info(f"Reading notes for user ID: {current_user.id}")
-        all_notes = db.query(Note).all()
-        logger.info(f"Total notes in database: {len(all_notes)}")
-        notes = db.query(Note).filter(Note.owner_id == current_user.id).all()
+        query = db.query(Note).filter(Note.owner_id == current_user.id)
+        if search:
+            search_term = f"%{search}%"
+            query = query.filter(Note.title.ilike(search_term))
+            logger.info(f"Searching for notes with title containing: {search}")
+        if status:
+            try:
+                visibility = VisibilityStatus(status)
+                query = query.filter(Note.visibility == visibility)
+                logger.info(f"Filtering notes by status: {status}")
+            except ValueError:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Invalid status value. Must be one of: {[v.value for v in VisibilityStatus]}"
+                )
+        notes = query.offset(skip).limit(limit).all()
+        
         logger.info(f"Notes found for user: {len(notes)}")
         for note in notes:
             logger.info(f"Note ID: {note.id}, Title: {note.title}, Owner ID: {note.owner_id}")
@@ -86,8 +102,11 @@ def read_notes(
                 **note.__dict__,
                 'visibility': note.visibility.value
             }
-            notes_list.append(note_dict) 
+            notes_list.append(note_dict)
+        
         return notes_list
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Error retrieving notes: {str(e)}")
         raise HTTPException(
