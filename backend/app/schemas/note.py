@@ -22,6 +22,7 @@ class Note(NoteBase):
     owner_id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
+    public_token: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -32,4 +33,7 @@ class Note(NoteBase):
 
 class NoteInDB(Note):
     owner: User
-    shared_with: List[User] = [] 
+    shared_with: List[User] = []
+
+class NoteShare(BaseModel):
+    email: str 

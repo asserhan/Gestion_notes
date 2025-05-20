@@ -3,11 +3,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 import logging
 from datetime import datetime, UTC
+import secrets
 
 from app.core.deps import get_db, get_current_active_user
 from app.database.models import User, Note, VisibilityStatus
-from app.schemas.note import NoteCreate, NoteUpdate, Note as NoteSchema
-
+from app.schemas.note import NoteCreate, NoteUpdate, Note as NoteSchema, NoteShare
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -42,7 +42,6 @@ def create_note(
         
         logger.info(f"Note created with ID: {note.id}, Owner ID: {note.owner_id}")
         
-        # Convert visibility back from enum to string for response
         note_dict = {
             **note.__dict__,
             'visibility': note.visibility.value
@@ -121,7 +120,6 @@ def read_note(
     note_id: int,
     current_user: User = Depends(get_current_active_user)
 ) -> Any:
-   
     try:
         note = db.query(Note).filter(Note.id == note_id).first()
         if not note:
@@ -204,4 +202,114 @@ def delete_note(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error deleting note: {str(e)}"
+        )
+
+@router.post("/{note_id}/share", response_model=NoteSchema)
+def share_note(
+    *,
+    db: Session = Depends(get_db),
+    note_id: int,
+    share_data: NoteShare,
+    current_user: User = Depends(get_current_active_user)
+) -> Any:
+    try:
+        note = db.query(Note).filter(Note.id == note_id).first()
+        if not note:
+            raise HTTPException(status_code=404, detail="Note not found")
+        if note.owner_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Only the owner can share notes")
+        
+        user_to_share = db.query(User).filter(User.email == share_data.email).first()
+        if not user_to_share:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        if user_to_share in note.shared_with:
+            raise HTTPException(status_code=400, detail="Note already shared with this user")
+        
+        note.shared_with.append(user_to_share)
+        db.commit()
+        db.refresh(note)
+        
+        logger.info(f"Note {note_id} shared with user {user_to_share.email}")
+        
+        note_dict = {
+            **note.__dict__,
+            'visibility': note.visibility.value
+        }
+        return note_dict
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error sharing note: {str(e)}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error sharing note: {str(e)}"
+        )
+
+@router.post("/{note_id}/public-link", response_model=dict)
+def generate_public_link(
+    *,
+    db: Session = Depends(get_db),
+    note_id: int,
+    current_user: User = Depends(get_current_active_user)
+) -> Any:
+    try:
+        note = db.query(Note).filter(Note.id == note_id).first()
+        if not note:
+            raise HTTPException(status_code=404, detail="Note not found")
+        if note.owner_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Only the owner can generate public links")
+        
+        public_token = secrets.token_urlsafe(32)
+        note.public_token = public_token
+        note.visibility = VisibilityStatus.PUBLIC
+        db.commit()
+        
+        public_url = f"http://localhost:8000/api/notes/public/{public_token}"
+        
+        logger.info(f"Generated public link for note {note_id}")
+        
+        return {
+            "public_url": public_url,
+            "note_id": note_id
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating public link: {str(e)}")
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error generating public link: {str(e)}"
+        )
+
+@router.get("/public/{token}", response_model=NoteSchema)
+def read_public_note(
+    *,
+    db: Session = Depends(get_db),
+    token: str
+) -> Any:
+    try:
+        note = db.query(Note).filter(Note.public_token == token).first()
+        if not note:
+            raise HTTPException(status_code=404, detail="Note not found")
+        if note.visibility != VisibilityStatus.PUBLIC:
+            raise HTTPException(status_code=403, detail="Note is not public")
+        
+        note_dict = {
+            **note.__dict__,
+            'visibility': note.visibility.value
+        }
+        return note_dict
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error retrieving public note: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving public note: {str(e)}"
         ) 
