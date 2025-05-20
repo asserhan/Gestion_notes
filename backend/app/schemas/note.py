@@ -8,7 +8,7 @@ from .tag import Tag
 class NoteBase(BaseModel):
     title: str
     content: str
-    visibility: VisibilityStatus
+    visibility: str  
 
 class NoteCreate(NoteBase):
     pass
@@ -16,16 +16,20 @@ class NoteCreate(NoteBase):
 class NoteUpdate(BaseModel):
     title: Optional[str] = None
     content: Optional[str] = None
-    visibility: Optional[VisibilityStatus] = None
+    visibility: Optional[str] = None
 
 class Note(NoteBase):
     id: int
     owner_id: int
     created_at: datetime
-    updated_at: datetime
+    updated_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
+        json_encoders = {
+            datetime: lambda v: v.isoformat() if v else None,
+            VisibilityStatus: lambda v: v.value
+        }
 
 class NoteInDB(Note):
     owner: User
